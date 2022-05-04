@@ -1,23 +1,41 @@
-import logo from './logo.svg';
-import './App.css';
+import {useEffect, useState} from 'react';
+import {getCharacters} from './services'
+import Character from './components/Character';
+import { useIntersectionObserver } from './hooks/useIntersectionObserver';
+import './App.css'
 
-function App() {
+
+const  App= () => {
+  const scrollingArea = document.getElementById('scrollingArea')
+  const [characters, setCharacters] = useState([])
+  const {observer, isIntersecting} = useIntersectionObserver({scrollingArea});
+  const [page, setPage] = useState(1);
+
+  useEffect(()=>{
+    getCharacters(page).then( data => {
+      setCharacters(characters => characters.concat(data))
+    }).catch( error => console.log(error))
+  }, [page])
+
+  useEffect(()=>{
+    if(observer && scrollingArea.lastChild){
+      observer.observe(scrollingArea.lastChild);
+    }
+  }, [observer, scrollingArea, characters])
+
+  useEffect(()=>{
+    if(isIntersecting){
+      setPage(page => page +=1);
+    }
+  }, [isIntersecting]);
+
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="App" id='scrollingArea'>
+      {
+        characters && characters.map(({id, image, name}) => <Character  key={id} image={image} name={name}/>)
+      }
+
     </div>
   );
 }
